@@ -53,11 +53,12 @@ Userdata      string
 Tags          map[string]string
 ```
 ### Communication
+
 Communitation with the provisioned EC2 instance will happen over SSH, public / private keys are generated for each new instance. 
 
 ### Docker support
 
-Allows the use of 
+Allow the use of:
 
 - docker images in a step 
 - drone plugins
@@ -81,8 +82,8 @@ Add the ability to seed an instance, to save on spin up time. This provides some
 
 #### How do we connect to pooled systems
 
-- **proposal 1**: ssh key pair are randomly generated once at the start of the daemon. When a build starts we use the shared ssh key pair. If there is nothing in the pool use a brand new key pair.
-- **proposal 2**: the user specifies a ssh key pair in the configuration, it shared for all instances.
+- **proposal 1**: SSH key pair are randomly generated once at the start of the daemon. When a build starts we use the shared ssh key pair. If there is nothing in the pool use a brand new key pair.
+- **proposal 2**: The user specifies a ssh key pair in the configuration, it shared for all instances.
 
 #### Lifecycle of the pool
 
@@ -91,8 +92,8 @@ Add the ability to seed an instance, to save on spin up time. This provides some
 
 #### Lifecycle of an EC2 instance
 
-- **proposal 1**: when a build completes the instance is destroyed. 
-- **proposal 2**: when the build completes the instance is returned to the pool. This has security concerns and possible build interaction issues especially for failed builds.
+- **proposal 1**: When a build completes the instance is destroyed. 
+- **proposal 2**: When the build completes the instance is returned to the pool. This has security concerns and possible build interaction issues especially for failed builds.
 
 ## Rationale
 
@@ -112,4 +113,4 @@ This fully compatible with the existing runner framework.
 
 - Windows - docker volumes
 - Windows - docker services
-- scheduling of pool size ?
+- Scheduling, weekends ?
