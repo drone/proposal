@@ -65,6 +65,7 @@ Allow the use of:
 - shared docker / temporary volumes
 - drone services 
 - drone detached steps.
+- run in priviliged mode (windows cannot do this)
 
 ### Pooling
 
@@ -78,12 +79,13 @@ Add the ability to seed an instance, to save on spin up time. This provides some
   -  The pool name == name of the pipeline.
   -  You can specify the size of the pool. 
   -  A pool can only be in one region. ??
-- **proposal 2**: The configuration file is simpler. 
+- **proposal 2**: The configuration file is simpler ???
 
 #### How do we connect to pooled systems
 
 - **proposal 1**: SSH key pair are randomly generated once at the start of the daemon. When a build starts we use the shared ssh key pair. If there is nothing in the pool use a brand new key pair.
-- **proposal 2**: The user specifies a ssh key pair in the configuration, it shared for all instances.
+- **proposal 2**: The user specifies a ssh key pair in the configuration file / .env , it shared for all EC2 instances.
+- **proposal 3**: The user uses files for ssh key pair in the configuration, These would have to be in a volume if the runner is in docker / kubernetes.
 
 #### Lifecycle of the pool
 
