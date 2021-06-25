@@ -1,5 +1,3 @@
-[This is a template for Drone's change proposal process, documented [here](../README.md).]
-
 # Proposal: AWS runner 
 
 Author(s): tphoney
@@ -19,11 +17,82 @@ There is already the autoscaler to provision runners in AWS, but there is no way
 ## Proposal
 
 Create a new runner based on the boilr template here. That can connect to a drone server providing EC2 instances to run a build against. It will have the basic functionality of other runners:
+
 - compile
 - daemon
 - exec
 
-To help mitigate the time to spin up instances the aws runner will allow the pooling of systems for hot-builds similar to how autoscaler works.
+#### AWS specific configuration
+
+We will use the golang library for amazon services link here.
+
+Global configuration:
+
+```
+Client string
+Secret string
+region string
+```
+
+Instance configuration:
+
+```
+Image         string
+Name          string
+Region        string
+Size          string
+Subnet        string
+Groups        []string
+Device        string
+PrivateIP     bool
+VolumeType    string
+VolumeSize    int64
+VolumeIops    int64
+IamProfileArn string
+Userdata      string
+Tags          map[string]string
+```
+### Communication
+Communitation with the provisioned EC2 instance will happen over SSH, public / private keys are generated for each new instance. 
+
+### Docker support
+
+Allows the use of 
+
+- docker images in a step 
+- drone plugins
+- shared docker / temporary volumes
+- drone services 
+- drone detached steps.
+
+### Pooling
+
+Add the ability to seed an instance, to save on spin up time. This provides some of the functionality of the autoscaler. 
+
+#### Configuration of the pool
+
+- **proposal 1**: The configuration file mirrors the build file, with the same settings mentioned in `AWS specific configuration`. 
+  -  Each pool only has one instance type. 
+  -  There can be multiple pools. 1 pool == 1 pipeline
+  -  The pool name == name of the pipeline.
+  -  You can specify the size of the pool. 
+  -  A pool can only be in one region. ??
+- **proposal 2**: The configuration file is simpler. 
+
+#### How do we connect to pooled systems
+
+- **proposal 1**: ssh key pair are randomly generated once at the start of the daemon. When a build starts we use the shared ssh key pair. If there is nothing in the pool use a brand new key pair.
+- **proposal 2**: the user specifies a ssh key pair in the configuration, it shared for all instances.
+
+#### Lifecycle of the pool
+
+- **proposal 1**: When a daemon starts it removes any instances that were previously there with the pool name. 
+- **proposal 2**: When a daemon starts we reuse any instances that were previously there with that pool name. (depends on a ssh pair key being set once)
+
+#### Lifecycle of an EC2 instance
+
+- **proposal 1**: when a build completes the instance is destroyed. 
+- **proposal 2**: when the build completes the instance is returned to the pool. This has security concerns and possible build interaction issues especially for failed builds.
 
 ## Rationale
 
@@ -35,10 +104,12 @@ This fully compatible with the existing runner framework.
 
 ## Implementation
 
-- Basic linux / windows support, including setup of git : POC stage
+- Basic linux / windows support, including setup of git / SSH : POC stage
 - Installation of docker, for container usage: POC stage
 - Pooling: design phase
 
 ## Open issues (if applicable)
 
-[A discussion of issues relating to this proposal for which the author does not know the solution. This section may be omitted if there are none.]
+- Windows - docker volumes
+- Windows - docker services
+- scheduling of pool size ?
