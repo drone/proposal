@@ -12,7 +12,7 @@ Add a new runner that provisions EC2 instances in AWS.
 
 ## Background
 
-There is already the autoscaler to provision runners in AWS, but there is no way to provision EC2 instances.
+There is already the autoscaler to provision drone runners in AWS, but there is no way to provision EC2 instances. The autoscaler is solid, but there are a number of customer requirements that are specific to that customer. This is an attempt to provide something more configurable by the customer.
 
 ## Proposal
 
