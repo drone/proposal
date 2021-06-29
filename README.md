@@ -29,7 +29,7 @@ Drone is a mature project with thousands of active installations, as such, signi
 
 ### Process
 
-- [Create an issue](https://github.com/drone/drone/issues/new) describing the proposal.
+- [Create an issue](https://github.com/drone/proposal/issues/new) describing the proposal.
 
 - The proposal is followed by an initial discussion about the suggestion.
 	- The goal of the initial discussion is to reach agreement on the next step:
