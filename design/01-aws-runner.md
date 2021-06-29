@@ -4,7 +4,7 @@ Author(s): tphoney
 
 Last updated: 2021/6/25
 
-Discussion at https://github.com/drone/drone/issues/01
+Discussion at https://github.com/drone/drone/issues/02
 
 ## Abstract
 
