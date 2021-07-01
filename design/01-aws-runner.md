@@ -153,4 +153,4 @@ This fully compatible with the existing runner framework.
 - Windows - docker volumes
 - Windows - docker services
 - when is docker ready, currently we have a timer
-- terminate instances on shutdown
+- add the runner name to aws tags, use for termination. is this really needed now ? what happens if there are 2 runners in a region
