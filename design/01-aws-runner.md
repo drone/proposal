@@ -78,11 +78,16 @@ Add the ability to seed an instance, to save on spin up time. This provides some
 
 - **proposal 1**: The configuration file mirrors the build file, with the same settings mentioned in `AWS specific configuration`. 
   -  Each pool only has one instance type. 
-  -  There can be multiple pools. 1 pool == 1 pipeline
+  -  There can be multiple pools. But a pool == a pipeline
   -  The pool name == name of the pipeline.
   -  You can specify the size of the pool. 
   -  A pool can only be in one region.
-- **proposal 2**: The configuration file is simpler ???
+- **proposal 2**: simple configuration file, mirroring some of the build file.
+  -  Each pool only has one instance type. 
+  -  There can be multiple pools. Different pipelines can use the same pool
+  -  You can specify the size of the pool. 
+  -  A pool can only be in one region.
+  -  A pipeline can use a pool, or specify its own adhoc build
 
 #### How do we connect to systems
 
@@ -120,6 +125,8 @@ status=build in progress
 
 The instance is removed when the build terminates
 
+Finally  check to see if the pool should be re-populated and create a pool instance.
+
 ##### ad-hoc instance
 
 This can happen if there are no instances in the pool, or the user hasnt set a ssh key pair.
@@ -132,7 +139,9 @@ pool=<pool name / pipeline name>
 status=build in progress
 ```
 
-The instance is removed when the build terminates
+The instance is removed when the build terminates.
+
+Finally  check to see if the pool should be re-populated and create a pool instance.
 
 ## Rationale
 
@@ -152,5 +161,3 @@ This fully compatible with the existing runner framework.
 
 - Windows - docker volumes
 - Windows - docker services
-- when is docker ready, currently we have a timer
-- add the runner name to aws tags, use for termination. is this really needed now ? what happens if there are 2 runners in a region
