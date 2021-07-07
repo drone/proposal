@@ -4,6 +4,8 @@
 
 Author(s): [Author Name, Co-Author Name]
 
+First Created: [Date]
+
 Last updated: [Date]
 
 Discussion at https://github.com/drone/drone/issues/{number}.
