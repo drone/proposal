@@ -2,7 +2,9 @@
 
 Author(s): tphoney
 
-Last updated: 2021/6/25
+First created: 2021/6/25
+
+Last updated: 2021/7/07
 
 Discussion at https://github.com/drone/drone/issues/02
 
@@ -26,7 +28,7 @@ Create a new runner based on the boilr template here. That can connect to a dron
 
 We will use the golang library for amazon services link `https://aws.amazon.com/sdk-for-go/`.
 
-Global configuration:
+Global configuration (in the .env file): 
 
 ```
 AwsAccessKeyID     string
@@ -34,10 +36,10 @@ AwsAccessKeySecret string
 AwsRegion          string
 PrivateKeyFile     string
 PublicKeyFile      string
-ReusePool          bool
+ReusePool          bool  - on startup shutdowm whether to kill existing instances in EC2
 ```
 
-Instance configuration:
+Instance configuration (in the pool file, or in the build file):
 
 ```
 Image         string
@@ -76,18 +78,54 @@ Add the ability to seed an instance, to save on spin up time. This provides some
 
 #### Configuration of the pool
 
-- **proposal 1**: The configuration file mirrors the build file, with the same settings mentioned in `AWS specific configuration`. 
-  -  Each pool only has one instance type. 
-  -  There can be multiple pools. But a pool == a pipeline
-  -  The pool name == name of the pipeline.
-  -  You can specify the size of the pool. 
-  -  A pool can only be in one region.
-- **proposal 2**: simple configuration file, mirroring some of the build file.
+- simple configuration file, mirroring some of the build file.
+  -  .drone_pool.yml is the default file name
   -  Each pool only has one instance type. 
   -  There can be multiple pools. Different pipelines can use the same pool
   -  You can specify the size of the pool. 
   -  A pool can only be in one region.
   -  A pipeline can use a pool, or specify its own adhoc build
+
+EG, This `.drone_pool.yml` file configures 2 pools each with one member
+
+```BASH
+kind: pipeline
+type: aws
+name: common
+pool_count: 1
+
+account:
+  region: us-east-2
+
+instance:
+# ubuntu 18.04 t1-micro ohio
+  ami: ami-051197ce9cbb023ea 
+  private_key: ./private_key_file
+  public_key: ./public_key_file
+  type: t2.nano
+  network:
+    security_groups:
+      - sg-0f5aaeb48d35162a4 
+
+----
+kind: pipeline
+type: aws
+name: weird
+pool_count: 1
+
+account:
+  region: us-east-2
+
+instance:
+# ubuntu 18.04 t1-micro ohio
+  ami: ami-051197ce9cbb023ea 
+  private_key: ./private_key_file
+  public_key: ./public_key_file
+  type: t2.nano
+  network:
+    security_groups:
+      - sg-0f5aaeb48d35162a4 
+```
 
 #### How do we connect to systems
 
@@ -109,11 +147,29 @@ If ReusePool is true, the instances are left running (depends on a ssh pair key 
 
 ##### Pool instance
 
+Here is a build file that references uses a pool. 
+
+```
+kind: pipeline
+type: aws
+name: default
+
+instance:
+  use_pool: common
+      
+steps:
+- name: display go version
+  image: golang
+  pull: if-not-exists
+  commands:
+  - go version
+```
+
 When an instance is created for a pool it has the aws tags:
 
 ```
 drone=drone-runner-aws
-pool=<pool name / pipeline name>
+pool=<pool name>
 ```
 The instance will live until it is used for a build or is terminated at shutdown of the runner.
 
@@ -123,25 +179,60 @@ When a pooled instance is picked up for a build, it is tagged in aws with:
 status=build in progress
 ```
 
+***If there are no pool instances left, we will create an adhoc instance. We use the information from the pool file to create this system***
+
 The instance is removed when the build terminates
 
 Finally  check to see if the pool should be re-populated and create a pool instance.
 
 ##### ad-hoc instance
 
-This can happen if there are no instances in the pool, or the user hasnt set a ssh key pair.
+Here is a build file where we specify aws information
+
+```
+kind: pipeline
+type: aws
+name: default
+
+platform:
+ os: windows
+
+instance:
+# Microsoft Windows Server 2019 container support ami-0135e8b5fca2ef4cf
+  ami: ami-0135e8b5fca2ef4cf
+  iam_profile_arn: "arn:aws:iam::577992088676:instance-profile/drone_iam_role"
+  type: t2.medium
+  network:
+    security_groups:
+      - sg-5d255b29
+  tags:
+    cat: dog
+
+steps:
+  - name: check install
+    commands:
+      - type C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log
+  - name: imagey + commands
+    image: golang:1.16.5-windowsservercore-1809
+    commands:
+      - go version
+      - go help
+  - name: docker status
+    commands:
+      - docker ps -a
+```
+
+This can happen if there the user hasnt set a ssh key pair.
 
 When an instance is created for immediate use it has the aws tags:
 
 ```
 drone=drone-runner-aws
-pool=<pool name / pipeline name>
+pool=<pool name>
 status=build in progress
 ```
 
 The instance is removed when the build terminates.
-
-Finally  check to see if the pool should be re-populated and create a pool instance.
 
 ## Rationale
 
@@ -161,3 +252,5 @@ This fully compatible with the existing runner framework.
 
 - Windows - docker volumes
 - Windows - docker services
+- Should we remove running build instances on startup, always.
+- Certain errors in engine will cause hard failures, killing any running builds. is this desireable 
