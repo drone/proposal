@@ -46,6 +46,9 @@ This fully compatible with the existing runner framework.
 - Gather additional information from pings on the server and save that into the database (allowing for pings without the info, for retro-compatibility)
 - Modify the `Ping` function to send additional information in the POST body
 - Modify runners to use the new runner-go code, implement a regular ping in each
+- Implement Prometheus metrics
+- Add an API endpoint to expose agents
+- Add a UI view to show all connected agents (runner/last report date/capacity table view)
 
 ## Open issues (if applicable)
 
