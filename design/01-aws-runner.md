@@ -4,7 +4,7 @@ Author(s): tphoney
 
 First created: 2021/6/25
 
-Last updated: 2021/7/07
+Last updated: 2021/7/21
 
 Discussion at https://github.com/drone/drone/issues/02
 
@@ -84,6 +84,7 @@ Add the ability to seed an instance, to save on spin up time. This provides some
   -  There can be multiple pools. Different pipelines can use the same pool
   -  You can specify the size of the pool. 
   -  A pool can only be in one region.
+  -  Changing the pool configuration will mean removing the existing images and restarting the daemon.
   -  A pipeline can use a pool, or specify its own adhoc build
 
 EG, This `.drone_pool.yml` file configures 2 pools each with one member
@@ -246,11 +247,8 @@ This fully compatible with the existing runner framework.
 
 - Basic linux / windows support, including setup of git / SSH : POC stage
 - Installation of docker, for container usage: POC stage
-- Pooling: design phase
+- Pooling: POC stage
 
-## Open issues (if applicable)
-
-- Windows - docker volumes
-- Windows - docker services
+## Open Questions (if applicable)
 - Should we remove running build instances on startup, always.
 - Certain errors in engine will cause hard failures, killing any running builds. is this desireable 
