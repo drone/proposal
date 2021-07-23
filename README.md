@@ -53,4 +53,4 @@ Drone is a mature project with thousands of active installations, as such, signi
 ## Help
 
 If you need help with this process, please contact the project contributors by posting
-to the [gitter channel](https://gitter.im/drone/drone).
+to the [Slack channel](https://join.slack.com/t/harnesscommunity/shared_invite/zt-90wb0w6u-OATJvUBkSDR3W9oYX7D~4A).
