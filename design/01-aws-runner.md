@@ -22,41 +22,23 @@ Create a new runner based on the boilr template here. That can connect to a dron
 
 - compile
 - daemon
-- exec
+- exec - only for development of the runner
 
 #### AWS specific configuration
 
 We will use the golang library for amazon services link `https://aws.amazon.com/sdk-for-go/`.
 
-Global configuration (in the .env file): 
+Global configuration along with other standard runner variables (in the .env file): 
 
 ```
-AwsAccessKeyID     string
-AwsAccessKeySecret string
-AwsRegion          string
-PrivateKeyFile     string
-PublicKeyFile      string
-ReusePool          bool  - on startup shutdowm whether to kill existing instances in EC2
+DRONE_SETTINGS_AWS_ACCESS_KEY_ID      string
+DRONE_SETTINGS_AWS_ACCESS_KEY_SECRET  string
+DRONE_SETTINGS_AWS_REGION             string
+DRONE_SETTINGS_PRIVATE_KEY_FILE       string
+DRONE_SETTINGS_PUBLIC_KEY_FILE        string
+DRONE_SETTINGS_REUSE_POOL             bool  - on startup shutdowm whether to kill existing instances in EC2
 ```
 
-Instance configuration (in the pool file, or in the build file):
-
-```
-Image         string
-Name          string
-Region        string
-Size          string
-Subnet        string
-Groups        []string
-Device        string
-PrivateIP     bool
-VolumeType    string
-VolumeSize    int64
-VolumeIops    int64
-IamProfileArn string
-Userdata      string
-Tags          map[string]string
-```
 ### Communication
 
 Communitation with the provisioned EC2 instance will happen over SSH, If provided we will use the public / private key file, or generate keys for each new instance. 
@@ -79,21 +61,77 @@ Add the ability to seed an instance, to save on spin up time. This provides some
 #### Configuration of the pool
 
 - simple configuration file, mirroring some of the build file.
-  -  .drone_pool.yml is the default file name
-  -  Each pool only has one instance type. 
-  -  There can be multiple pools. Different pipelines can use the same pool
-  -  You can specify the size of the pool. 
-  -  A pool can only be in one region.
-  -  Changing the pool configuration will mean removing the existing images and restarting the daemon.
-  -  A pipeline can use a pool, or specify its own adhoc build
+-  .drone_pool.yml is the default file name
+-  Each pool only has one instance type. 
+-  There can be multiple pools. Different pipelines can use the same pool
+-  You can specify the size of the pool. 
+-  A pool can only be in one region.
+-  Changing the pool configuration will mean removing the existing images and restarting the daemon.
+-  If the pool is empty, it will trigger an adhoc instance.
 
-EG, This `.drone_pool.yml` file configures 2 pools each with one member
+#### Here are pool settings settings
 
-```BASH
-kind: pipeline
-type: aws
+A pool has:
+
+```yaml
+  name          string
+  max_pool_size int
+  platform      Platform
+  account       Account
+  instance      Instance
+```
+
+where Platform is(this is the same as plaform in other runners):
+
+```yaml
+  os      string
+  arch    string
+  variant string
+  version string
+```
+
+where Account is (over-rides env settings):
+
+```yaml
+  access_key_id     string
+  access_key_secret string
+  region            string
+```
+
+where Instance contains aws instance specific ima:
+
+```yaml
+  ami              string
+  tags             []string
+  iam_profile_arn  string
+  type             string
+  disk             Disk
+  network          Network
+```
+
+where Disk contains aws block information:
+
+```yaml
+  size int
+  type string
+  iops string
+```
+
+where Network contains aws network information:
+
+```yaml
+  vpc                 int
+  vpc_security_groups []string
+  security_groups     []string
+  subnet_id           string
+  private_ip          bool
+```
+
+EG, This `.drone_pool.yml` file configures 2 pools each with a maximum pool size of 1
+
+```yaml
 name: common
-pool_count: 1
+max_pool_size: 1
 
 account:
   region: us-east-2
@@ -109,13 +147,14 @@ instance:
       - sg-0f5aaeb48d35162a4 
 
 ----
-kind: pipeline
-type: aws
-name: weird
-pool_count: 1
+name: windows 2019
+max_pool_size: 1
 
 account:
   region: us-east-2
+
+platform:
+ os: windows  
 
 instance:
 # ubuntu 18.04 t1-micro ohio
@@ -150,13 +189,13 @@ If ReusePool is true, the instances are left running (depends on a ssh pair key 
 
 Here is a build file that references uses a pool. 
 
-```
+```yaml
 kind: pipeline
 type: aws
 name: default
 
-instance:
-  use_pool: common
+pool:
+  use: common
       
 steps:
 - name: display go version
@@ -184,56 +223,7 @@ status=build in progress
 
 The instance is removed when the build terminates
 
-Finally  check to see if the pool should be re-populated and create a pool instance.
-
-##### ad-hoc instance
-
-Here is a build file where we specify aws information
-
-```
-kind: pipeline
-type: aws
-name: default
-
-platform:
- os: windows
-
-instance:
-# Microsoft Windows Server 2019 container support ami-0135e8b5fca2ef4cf
-  ami: ami-0135e8b5fca2ef4cf
-  iam_profile_arn: "arn:aws:iam::577992088676:instance-profile/drone_iam_role"
-  type: t2.medium
-  network:
-    security_groups:
-      - sg-5d255b29
-  tags:
-    cat: dog
-
-steps:
-  - name: check install
-    commands:
-      - type C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log
-  - name: imagey + commands
-    image: golang:1.16.5-windowsservercore-1809
-    commands:
-      - go version
-      - go help
-  - name: docker status
-    commands:
-      - docker ps -a
-```
-
-This can happen if there the user hasnt set a ssh key pair.
-
-When an instance is created for immediate use it has the aws tags:
-
-```
-drone=drone-runner-aws
-pool=<pool name>
-status=build in progress
-```
-
-The instance is removed when the build terminates.
+Finally check to see if the pool should be re-populated and create a pool instance.
 
 ## Rationale
 
