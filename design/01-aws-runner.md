@@ -75,35 +75,35 @@ A pool has:
 
 ```yaml
   name          string
-	max_pool_size int
-	platform      Platform
-	account       Account
-	instance      Instance
+  max_pool_size int
+  platform      Platform
+  account       Account
+  instance      Instance
 ```
 
 where Platform is(this is the same as plaform in other runners):
 
 ```yaml
   os      string
-	arch    string
-	variant string
-	version string
+  arch    string
+  variant string
+  version string
 ```
 
 where Account is (over-rides env settings):
 
 ```yaml
   access_key_id     string
-	access_key_secret string
-	region            string
+  access_key_secret string
+  region            string
 ```
 
 where Instance contains aws instance specific ima:
 
 ```yaml
   ami              string
-	tags             []string
-	iam_profile_arn  string
+  tags             []string
+  iam_profile_arn  string
   type             string
   disk             Disk
   network          Network
